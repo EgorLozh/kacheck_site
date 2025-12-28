@@ -20,6 +20,8 @@ class UserRepositoryImpl(IUserRepository):
             email=user.email,
             username=user.username,
             hashed_password=user.hashed_password,
+            weight=user.weight,
+            height=user.height,
             created_at=user.created_at,
             updated_at=user.updated_at,
         )
@@ -49,6 +51,8 @@ class UserRepositoryImpl(IUserRepository):
         db_user.email = user.email
         db_user.username = user.username
         db_user.hashed_password = user.hashed_password
+        db_user.weight = user.weight
+        db_user.height = user.height
         db_user.updated_at = datetime.utcnow()
 
         self.db.commit()
@@ -70,7 +74,10 @@ class UserRepositoryImpl(IUserRepository):
             email=db_user.email,
             username=db_user.username,
             hashed_password=db_user.hashed_password,
+            weight=float(db_user.weight) if db_user.weight is not None else None,
+            height=float(db_user.height) if db_user.height is not None else None,
             created_at=db_user.created_at,
             updated_at=db_user.updated_at,
         )
+
 

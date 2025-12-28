@@ -34,3 +34,4 @@ class ExerciseResponseDTO:
     user_id: Optional[int]
     muscle_group_ids: List[int]
 
+

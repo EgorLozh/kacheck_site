@@ -103,3 +103,4 @@ class UpdateTrainingUseCase:
             implementations=impl_dtos,
         )
 
+

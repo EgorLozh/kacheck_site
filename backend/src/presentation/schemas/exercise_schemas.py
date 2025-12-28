@@ -36,3 +36,4 @@ class ExerciseResponse(ExerciseBase):
     class Config:
         from_attributes = True
 
+

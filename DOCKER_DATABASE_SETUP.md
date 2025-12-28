@@ -95,3 +95,4 @@ SECRET_KEY=your-secret-key
 DATABASE_URL=postgresql://postgres:password@db.example.com:5432/kacheck_bot
 ```
 
+

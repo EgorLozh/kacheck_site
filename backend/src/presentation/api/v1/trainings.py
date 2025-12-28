@@ -13,10 +13,51 @@ from src.application.use_cases.trainings.create_training_from_template import (
     CreateTrainingFromTemplateUseCase,
 )
 from src.application.dto.training_dto import CreateTrainingDTO, UpdateTrainingDTO, ImplementationDTO, SetDTO
-from src.presentation.schemas.training_schemas import TrainingCreate, TrainingUpdate, TrainingResponse
+from src.presentation.schemas.training_schemas import (
+    TrainingCreate,
+    TrainingUpdate,
+    TrainingResponse,
+    ImplementationBase,
+    SetBase,
+)
 from src.presentation.api.dependencies import get_current_user_id
 
 router = APIRouter(prefix="/trainings", tags=["trainings"])
+
+
+def dto_to_response(dto) -> TrainingResponse:
+    """Convert TrainingResponseDTO to TrainingResponse Pydantic schema."""
+    impl_schemas = []
+    for impl_dto in dto.implementations:
+        set_schemas = [
+            SetBase(
+                order_index=st.order_index,
+                weight=st.weight,
+                reps=st.reps,
+                rest_time=st.rest_time,
+                duration=st.duration,
+                rpe=st.rpe,
+            )
+            for st in impl_dto.sets
+        ]
+        impl_schemas.append(
+            ImplementationBase(
+                exercise_id=impl_dto.exercise_id,
+                order_index=impl_dto.order_index,
+                sets=set_schemas,
+            )
+        )
+    
+    return TrainingResponse(
+        id=dto.id,
+        user_id=dto.user_id,
+        training_template_id=dto.training_template_id,
+        date_time=dto.date_time,
+        duration=dto.duration,
+        notes=dto.notes,
+        status=dto.status,
+        implementations=impl_schemas,
+    )
 
 
 def get_training_repository(db: Session = Depends(get_db)) -> TrainingRepositoryImpl:
@@ -68,7 +109,7 @@ async def create_training(
         )
 
         result = use_case.execute(dto, current_user_id)
-        return TrainingResponse(**result.__dict__)
+        return dto_to_response(result)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -94,7 +135,7 @@ async def get_trainings(
         dto = GetTrainingByIdUseCase._to_dto(training)
         results.append(dto)
 
-    return [TrainingResponse(**result.__dict__) for result in results]
+    return [dto_to_response(result) for result in results]
 
 
 @router.get("/{training_id}", response_model=TrainingResponse)
@@ -110,7 +151,7 @@ async def get_training(
     result = use_case.execute(training_id, current_user_id)
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Training not found")
-    return TrainingResponse(**result.__dict__)
+    return dto_to_response(result)
 
 
 @router.put("/{training_id}", response_model=TrainingResponse)
@@ -158,7 +199,7 @@ async def update_training(
         )
 
         result = use_case.execute(training_id, dto, current_user_id)
-        return TrainingResponse(**result.__dict__)
+        return dto_to_response(result)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -193,7 +234,7 @@ async def create_training_from_template(
 
     try:
         result = use_case.execute(template_id, current_user_id, date_time)
-        return TrainingResponse(**result.__dict__)
+        return dto_to_response(result)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 

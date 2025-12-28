@@ -12,3 +12,4 @@ class SetTemplate:
     weight: Optional[float]  # Optional weight value
     reps: Optional[int]  # Optional reps value
 
+

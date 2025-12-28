@@ -127,3 +127,4 @@ class ExerciseRepositoryImpl(IExerciseRepository):
             updated_at=db_exercise.updated_at,
         )
 
+

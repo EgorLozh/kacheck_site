@@ -28,3 +28,4 @@ class MuscleGroupResponse(MuscleGroupBase):
     class Config:
         from_attributes = True
 
+

@@ -10,6 +10,7 @@ class TrainingStatus(str, Enum):
     """Training status enum."""
 
     PLANNED = "planned"
+    IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     SKIPPED = "skipped"
 

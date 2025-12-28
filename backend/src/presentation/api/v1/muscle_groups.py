@@ -46,3 +46,4 @@ async def get_muscle_groups(
     results = use_case.execute(include_system=include_system)
     return [MuscleGroupResponse(**result.__dict__) for result in results]
 
+

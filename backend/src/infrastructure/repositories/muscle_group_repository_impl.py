@@ -80,3 +80,4 @@ class MuscleGroupRepositoryImpl(IMuscleGroupRepository):
             updated_at=db_muscle_group.updated_at,
         )
 
+

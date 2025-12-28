@@ -61,3 +61,4 @@ class TrainingResponse(TrainingBase):
     class Config:
         from_attributes = True
 
+

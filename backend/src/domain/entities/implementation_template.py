@@ -14,3 +14,4 @@ class ImplementationTemplate:
     order_index: int
     set_templates: List[SetTemplate] = field(default_factory=list)
 
+

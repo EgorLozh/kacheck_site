@@ -24,3 +24,4 @@ class ImplementationTemplateModel(Base):
         order_by="SetTemplateModel.order_index",
     )
 
+

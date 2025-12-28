@@ -37,3 +37,4 @@ class IExerciseRepository(ABC):
         """Get exercises by muscle group."""
         pass
 
+

@@ -48,3 +48,4 @@ class TemplateResponseDTO:
     user_id: Optional[int]
     implementation_templates: List[ImplementationTemplateDTO]
 
+

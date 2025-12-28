@@ -26,3 +26,4 @@ COPY --from=builder /app/build ./build
 # In production, you would copy these to the backend container
 CMD ["sh", "-c", "cp -r build/* /shared/static/"]
 
+

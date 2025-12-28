@@ -7,6 +7,7 @@ import TrainingsPage from './pages/TrainingsPage'
 import TemplatesPage from './pages/TemplatesPage'
 import ExercisesPage from './pages/ExercisesPage'
 import AnalyticsPage from './pages/AnalyticsPage'
+import ActiveTrainingPage from './pages/ActiveTrainingPage'
 import Layout from './components/layout/Layout'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/trainings/active/:id" element={<ActiveTrainingPage />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />

@@ -171,3 +171,4 @@ class TrainingTemplateRepositoryImpl(ITrainingTemplateRepository):
             updated_at=db_template.updated_at,
         )
 
+

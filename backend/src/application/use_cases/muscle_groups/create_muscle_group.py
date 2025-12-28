@@ -30,3 +30,4 @@ class CreateMuscleGroupUseCase:
             is_system=created_muscle_group.is_system,
         )
 
+

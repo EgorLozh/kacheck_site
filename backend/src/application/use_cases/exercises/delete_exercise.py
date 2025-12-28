@@ -24,3 +24,4 @@ class DeleteExerciseUseCase:
 
         self.exercise_repository.delete(exercise_id)
 
+

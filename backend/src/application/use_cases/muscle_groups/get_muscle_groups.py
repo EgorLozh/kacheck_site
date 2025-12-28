@@ -23,3 +23,4 @@ class GetMuscleGroupsUseCase:
             for mg in muscle_groups
         ]
 
+

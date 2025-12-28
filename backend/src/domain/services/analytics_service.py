@@ -1,7 +1,10 @@
-from typing import List, Dict, Optional
-from datetime import datetime
+from typing import List, Dict, Optional, Union
+from datetime import datetime, date
+from collections import defaultdict
 
 from ..entities.set import Set
+from ..entities.training import Training
+from ..entities.user_body_metric import UserBodyMetric
 
 
 class AnalyticsService:
@@ -85,4 +88,99 @@ class AnalyticsService:
         for date, sets in sets_by_date.items():
             progress[date] = AnalyticsService.calculate_volume(sets)
         return progress
+
+    @staticmethod
+    def calculate_bmi(weight: float, height: float) -> float:
+        """
+        Calculate Body Mass Index (BMI).
+
+        Args:
+            weight: Weight in kg
+            height: Height in cm
+
+        Returns:
+            BMI value
+        """
+        if height <= 0:
+            raise ValueError("Height must be greater than 0")
+        height_m = height / 100.0  # Convert cm to meters
+        return weight / (height_m ** 2)
+
+    @staticmethod
+    def get_training_frequency(trainings: List[Training]) -> Dict[date, int]:
+        """
+        Get training frequency by date (number of trainings per date).
+
+        Args:
+            trainings: List of trainings
+
+        Returns:
+            Dictionary mapping dates to number of trainings
+        """
+        frequency = defaultdict(int)
+        for training in trainings:
+            # Extract date from datetime
+            training_date = training.date_time.date() if isinstance(training.date_time, datetime) else training.date_time
+            frequency[training_date] += 1
+        return dict(frequency)
+
+    @staticmethod
+    def get_total_volume_by_date(trainings: List[Training]) -> Dict[date, float]:
+        """
+        Get total volume (all exercises combined) by date.
+
+        Args:
+            trainings: List of trainings
+
+        Returns:
+            Dictionary mapping dates to total volumes
+        """
+        volume_by_date = defaultdict(float)
+        for training in trainings:
+            training_date = training.date_time.date() if isinstance(training.date_time, datetime) else training.date_time
+            total_volume = 0.0
+            for impl in training.implementations:
+                total_volume += AnalyticsService.calculate_volume(impl.sets)
+            volume_by_date[training_date] += total_volume
+        return dict(volume_by_date)
+
+    @staticmethod
+    def get_weight_progress_from_metrics(metrics: List[UserBodyMetric]) -> Dict[date, float]:
+        """
+        Get weight progress from body metrics.
+
+        Args:
+            metrics: List of body metrics
+
+        Returns:
+            Dictionary mapping dates to weights (only entries with weight data)
+        """
+        progress = {}
+        for metric in metrics:
+            if metric.weight is not None:
+                progress[metric.date] = metric.weight
+        return progress
+
+    @staticmethod
+    def get_bmi_progress_from_metrics(metrics: List[UserBodyMetric]) -> Dict[date, float]:
+        """
+        Get BMI progress from body metrics.
+
+        Args:
+            metrics: List of body metrics
+
+        Returns:
+            Dictionary mapping dates to BMI values (only entries with both weight and height)
+        """
+        progress = {}
+        for metric in metrics:
+            if metric.weight is not None and metric.height is not None:
+                try:
+                    bmi = AnalyticsService.calculate_bmi(metric.weight, metric.height)
+                    progress[metric.date] = bmi
+                except ValueError:
+                    # Skip invalid entries
+                    continue
+        return progress
+
 

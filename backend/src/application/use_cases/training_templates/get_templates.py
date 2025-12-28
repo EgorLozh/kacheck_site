@@ -47,3 +47,4 @@ class GetTemplatesUseCase:
             implementation_templates=impl_dtos,
         )
 
+

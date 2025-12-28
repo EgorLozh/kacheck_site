@@ -1,4 +1,5 @@
 from .user_model import UserModel
+from .user_body_metric_model import UserBodyMetricModel
 from .exercise_model import ExerciseModel
 from .muscle_group_model import MuscleGroupModel
 from .exercise_muscle_group_model import ExerciseMuscleGroupModel
@@ -11,6 +12,7 @@ from .set_model import SetModel
 
 __all__ = [
     "UserModel",
+    "UserBodyMetricModel",
     "ExerciseModel",
     "MuscleGroupModel",
     "ExerciseMuscleGroupModel",
@@ -21,4 +23,5 @@ __all__ = [
     "ImplementationModel",
     "SetModel",
 ]
+
 

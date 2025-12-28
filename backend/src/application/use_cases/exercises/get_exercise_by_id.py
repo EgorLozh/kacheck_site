@@ -26,3 +26,4 @@ class GetExerciseByIdUseCase:
             muscle_group_ids=exercise.muscle_group_ids,
         )
 
+

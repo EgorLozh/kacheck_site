@@ -38,3 +38,4 @@ class ITrainingRepository(ABC):
         """Delete training."""
         pass
 
+

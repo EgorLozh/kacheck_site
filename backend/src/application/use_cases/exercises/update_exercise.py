@@ -43,3 +43,4 @@ class UpdateExerciseUseCase:
             muscle_group_ids=updated_exercise.muscle_group_ids,
         )
 
+

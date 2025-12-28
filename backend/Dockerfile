@@ -42,3 +42,4 @@ EXPOSE 8000
 # Run entrypoint
 ENTRYPOINT ["./entrypoint.sh"]
 
+

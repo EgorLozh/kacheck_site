@@ -20,3 +20,4 @@ class SetTemplateModel(Base):
     # Relationships
     implementation_template = relationship("ImplementationTemplateModel", back_populates="set_templates")
 
+

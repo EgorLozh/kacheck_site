@@ -21,3 +21,4 @@ class Set:
     duration: Optional[Duration]
     rpe: Optional[RPE]
 
+

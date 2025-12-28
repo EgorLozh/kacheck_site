@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import Optional
 
 
 class RegisterRequest(BaseModel):
@@ -39,6 +40,8 @@ class UserResponse(BaseModel):
     id: int
     email: str
     username: str
+    weight: Optional[float] = None
+    height: Optional[float] = None
 
     class Config:
         from_attributes = True

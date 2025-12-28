@@ -62,3 +62,4 @@ class ImageStorageService:
             return file_path
         return None
 
+

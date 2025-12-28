@@ -23,3 +23,4 @@ class MuscleGroupResponseDTO:
     name: str
     is_system: bool
 
+

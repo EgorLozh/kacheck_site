@@ -25,3 +25,4 @@ class RestTime:
             return None
         return cls(value)
 
+

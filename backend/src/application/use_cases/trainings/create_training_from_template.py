@@ -68,3 +68,4 @@ class CreateTrainingFromTemplateUseCase:
             implementations=impl_dtos,
         )
 
+

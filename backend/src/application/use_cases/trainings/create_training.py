@@ -20,37 +20,39 @@ class CreateTrainingUseCase:
 
     def execute(self, dto: CreateTrainingDTO, user_id: int) -> TrainingResponseDTO:
         """Create a new training."""
-        if not dto.implementations:
+        # Allow empty implementations for in_progress trainings (user will add exercises gradually)
+        if not dto.implementations and dto.status != TrainingStatus.IN_PROGRESS:
             raise ValueError("Training must have at least one implementation")
 
         now = datetime.utcnow()
 
         # Convert DTOs to domain entities
         implementations = []
-        for impl_dto in dto.implementations:
-            sets = []
-            for set_dto in impl_dto.sets:
-                sets.append(
-                    Set(
+        if dto.implementations:
+            for impl_dto in dto.implementations:
+                sets = []
+                for set_dto in impl_dto.sets:
+                    sets.append(
+                        Set(
+                            id=None,
+                            implementation_id=0,  # Will be set when saved
+                            order_index=set_dto.order_index,
+                            weight=Weight(set_dto.weight),
+                            reps=Reps(set_dto.reps),
+                            rest_time=RestTime.optional(set_dto.rest_time),
+                            duration=Duration.optional(set_dto.duration),
+                            rpe=RPE.optional(set_dto.rpe),
+                        )
+                    )
+                implementations.append(
+                    Implementation(
                         id=None,
-                        implementation_id=0,  # Will be set when saved
-                        order_index=set_dto.order_index,
-                        weight=Weight(set_dto.weight),
-                        reps=Reps(set_dto.reps),
-                        rest_time=RestTime.optional(set_dto.rest_time),
-                        duration=Duration.optional(set_dto.duration),
-                        rpe=RPE.optional(set_dto.rpe),
+                        training_id=0,  # Will be set when saved
+                        exercise_id=impl_dto.exercise_id,
+                        order_index=impl_dto.order_index,
+                        sets=sets,
                     )
                 )
-            implementations.append(
-                Implementation(
-                    id=None,
-                    training_id=0,  # Will be set when saved
-                    exercise_id=impl_dto.exercise_id,
-                    order_index=impl_dto.order_index,
-                    sets=sets,
-                )
-            )
 
         training = Training(
             id=None,
@@ -102,4 +104,5 @@ class CreateTrainingUseCase:
             status=training.status,
             implementations=impl_dtos,
         )
+
 

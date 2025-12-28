@@ -14,8 +14,10 @@ class User:
     email: str
     username: str
     hashed_password: str
-    created_at: datetime
-    updated_at: datetime
+    weight: Optional[float] = None  # Current weight in kg
+    height: Optional[float] = None  # Current height in cm
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     def get_training_templates(self, templates: List["TrainingTemplate"]) -> List["TrainingTemplate"]:
         """Get training templates for this user."""

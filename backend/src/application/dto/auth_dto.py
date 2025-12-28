@@ -26,6 +26,8 @@ class UserResponseDTO:
     id: int
     email: str
     username: str
+    weight: Optional[float] = None  # Current weight in kg
+    height: Optional[float] = None  # Current height in cm
 
 
 @dataclass
@@ -34,4 +36,5 @@ class TokenResponseDTO:
 
     access_token: str
     token_type: str = "bearer"
+
 

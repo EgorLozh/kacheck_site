@@ -32,3 +32,4 @@ class IMuscleGroupRepository(ABC):
         """Delete muscle group."""
         pass
 
+

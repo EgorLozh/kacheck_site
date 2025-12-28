@@ -194,3 +194,4 @@ class TrainingRepositoryImpl(ITrainingRepository):
             updated_at=db_training.updated_at,
         )
 
+

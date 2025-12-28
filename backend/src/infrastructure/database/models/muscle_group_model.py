@@ -23,3 +23,4 @@ class MuscleGroupModel(Base):
         cascade="all, delete-orphan",
     )
 
+

@@ -1,4 +1,5 @@
 from .user import User
+from .user_body_metric import UserBodyMetric
 from .exercise import Exercise
 from .muscle_group import MuscleGroup
 from .training_template import TrainingTemplate
@@ -10,6 +11,7 @@ from .set import Set
 
 __all__ = [
     "User",
+    "UserBodyMetric",
     "Exercise",
     "MuscleGroup",
     "TrainingTemplate",
@@ -19,4 +21,5 @@ __all__ = [
     "Implementation",
     "Set",
 ]
+
 

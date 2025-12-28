@@ -42,5 +42,8 @@ class RegisterUserUseCase:
             id=created_user.id,
             email=created_user.email,
             username=created_user.username,
+            weight=created_user.weight,
+            height=created_user.height,
         )
+
 

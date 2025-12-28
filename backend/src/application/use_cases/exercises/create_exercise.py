@@ -39,3 +39,4 @@ class CreateExerciseUseCase:
             muscle_group_ids=created_exercise.muscle_group_ids,
         )
 
+

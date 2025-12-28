@@ -62,7 +62,7 @@ export interface Training {
   date_time: string
   duration?: number
   notes?: string
-  status: 'planned' | 'completed' | 'skipped'
+  status: 'planned' | 'in_progress' | 'completed' | 'skipped'
   implementations: Implementation[]
 }
 
@@ -81,4 +81,5 @@ export interface TokenResponse {
   access_token: string
   token_type: string
 }
+
 

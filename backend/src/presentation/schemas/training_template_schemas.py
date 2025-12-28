@@ -49,3 +49,4 @@ class TemplateResponse(TemplateBase):
     class Config:
         from_attributes = True
 
+

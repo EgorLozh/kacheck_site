@@ -25,3 +25,4 @@ class Duration:
             return None
         return cls(value)
 
+

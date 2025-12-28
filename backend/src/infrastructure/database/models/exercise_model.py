@@ -37,3 +37,4 @@ class ExerciseModel(Base):
         cascade="all, delete-orphan",
     )
 
+

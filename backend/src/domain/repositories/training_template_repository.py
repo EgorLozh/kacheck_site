@@ -32,3 +32,4 @@ class ITrainingTemplateRepository(ABC):
         """Delete training template."""
         pass
 
+
