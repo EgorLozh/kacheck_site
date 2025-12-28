@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { authService } from '../services/auth.service'
 import { useAuth } from '../contexts/AuthContext'
+import { formatApiError } from '../utils/errorHandler'
 
 const registerSchema = z.object({
   email: z.string().email('Неверный формат email'),
@@ -47,7 +48,14 @@ export default function RegisterPage() {
       setToken(loginResponse.access_token)
       navigate('/dashboard')
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка регистрации')
+      try {
+        const errorMessage = formatApiError(err)
+        // Ensure we always set a string
+        setError(String(errorMessage || 'Произошла неизвестная ошибка. Попробуйте еще раз.'))
+      } catch (formatErr) {
+        // If formatApiError itself fails, set a fallback message
+        setError('Произошла ошибка при обработке данных. Попробуйте еще раз.')
+      }
     }
   }
 
@@ -61,8 +69,9 @@ export default function RegisterPage() {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
+            <div className="bg-red-50 border-2 border-red-400 text-red-800 px-4 py-3 rounded-md mb-4" role="alert">
+              <div className="font-semibold mb-1">Ошибка регистрации</div>
+              <div className="text-sm">{error}</div>
             </div>
           )}
 

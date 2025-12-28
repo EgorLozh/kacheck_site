@@ -48,13 +48,19 @@ class ExerciseRepositoryImpl(IExerciseRepository):
         """Get all exercises, optionally filtered by user."""
         query = self.db.query(ExerciseModel)
 
-        if not include_system:
-            query = query.filter(ExerciseModel.is_custom == True)  # noqa: E712
-
         if user_id is not None:
-            query = query.filter(
-                (ExerciseModel.user_id == user_id) | (ExerciseModel.is_custom == False)  # noqa: E712
-            )
+            # Return user's own exercises or system exercises (is_custom=False and user_id=None)
+            if include_system:
+                query = query.filter(
+                    (ExerciseModel.user_id == user_id) | 
+                    ((ExerciseModel.is_custom == False) & (ExerciseModel.user_id.is_(None)))  # noqa: E712
+                )
+            else:
+                # Only user's own exercises
+                query = query.filter(ExerciseModel.user_id == user_id)
+        elif not include_system:
+            # If no user_id specified and exclude system, return only custom exercises
+            query = query.filter(ExerciseModel.is_custom == True)  # noqa: E712
 
         db_exercises = query.all()
         return [self._to_entity(ex) for ex in db_exercises]

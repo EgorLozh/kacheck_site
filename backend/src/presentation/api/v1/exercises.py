@@ -48,12 +48,13 @@ async def create_exercise(
 async def get_exercises(
     include_system: bool = True,
     db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Get all exercises."""
     exercise_repository = get_exercise_repository(db)
     use_case = GetExercisesUseCase(exercise_repository)
 
-    results = use_case.execute(user_id=None, include_system=include_system)
+    results = use_case.execute(user_id=current_user_id, include_system=include_system)
     return [ExerciseResponse(**result.__dict__) for result in results]
 
 
@@ -61,12 +62,13 @@ async def get_exercises(
 async def get_exercise(
     exercise_id: int,
     db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """Get exercise by ID."""
     exercise_repository = get_exercise_repository(db)
     use_case = GetExerciseByIdUseCase(exercise_repository)
 
-    result = use_case.execute(exercise_id)
+    result = use_case.execute(exercise_id, user_id=current_user_id)
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exercise not found")
     return ExerciseResponse(**result.__dict__)
