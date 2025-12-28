@@ -3,6 +3,7 @@ import { trainingService } from '../services/training.service'
 import { userProfileService } from '../services/user-profile.service'
 import { analyticsService } from '../services/analytics.service'
 import WeightHeightInput from '../components/WeightHeightInput'
+import PRList from '../components/analytics/PRList'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { format, subDays } from 'date-fns'
 import type { Training } from '../types'
@@ -16,7 +17,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({
     today: 0,
     total: 0,
-    totalVolume: 0,
+    streak: 0,
   })
   const [profile, setProfile] = useState<{ weight?: number; height?: number }>({})
   const [trainingFrequency, setTrainingFrequency] = useState<ChartData[]>([])
@@ -45,19 +46,19 @@ export default function DashboardPage() {
         return trainingDate.getTime() === today.getTime()
       })
 
-      let totalVolume = 0
-      trainings.forEach((training) => {
-        training.implementations?.forEach((impl) => {
-          impl.sets?.forEach((set) => {
-            totalVolume += set.weight * set.reps
-          })
-        })
-      })
+      // Load streak
+      let streak = 0
+      try {
+        const streakData = await analyticsService.getStreak()
+        streak = streakData.streak
+      } catch (err) {
+        console.error('Ошибка загрузки серии:', err)
+      }
 
       setStats({
         today: todayTrainings.length,
         total: trainings.length,
-        totalVolume: Math.round(totalVolume),
+        streak: streak,
       })
 
       // Calculate motivational message based on last training date
@@ -200,11 +201,22 @@ export default function DashboardPage() {
           )}
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold text-gray-700 mb-2">Общий объем</h2>
+          <h2 className="text-lg font-semibold text-gray-700 mb-2">Серия дней</h2>
           {loading ? (
             <p className="text-3xl font-bold text-purple-600">...</p>
           ) : (
-            <p className="text-3xl font-bold text-purple-600">{stats.totalVolume} кг</p>
+            <>
+              <p className="text-3xl font-bold text-purple-600">{stats.streak}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {stats.streak === 0 
+                  ? 'Начните серию!' 
+                  : stats.streak === 1 
+                  ? 'день подряд' 
+                  : stats.streak < 5
+                  ? 'дня подряд'
+                  : 'дней подряд'}
+              </p>
+            </>
           )}
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
@@ -280,6 +292,20 @@ export default function DashboardPage() {
             <p className="text-gray-500 text-center py-8">Нет данных</p>
           )}
         </div>
+      </div>
+
+      {/* Personal Records Section */}
+      <div className="bg-white p-6 rounded-lg shadow mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Личные рекорды (PR)</h2>
+          <a
+            href="/analytics"
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            Все рекорды →
+          </a>
+        </div>
+        <PRList limit={3} showLatest={true} />
       </div>
 
       {/* Weight Progress Chart */}

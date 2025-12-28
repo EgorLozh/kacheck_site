@@ -32,6 +32,56 @@ export interface ExerciseVolumeProgressResponse {
   progress: Record<string, number>
 }
 
+export interface PR {
+  exercise_id: number
+  exercise_name: string
+  weight: number
+  reps: number
+  date: string
+  training_id: number
+}
+
+export interface PRsResponse {
+  prs: PR[]
+}
+
+export interface ExercisePRResponse {
+  exercise_id: number
+  exercise_name?: string
+  pr: {
+    weight: number
+    reps: number
+    date: string
+    training_id: number
+  } | null
+}
+
+export interface OneRMProgressResponse {
+  exercise_id: number
+  formula: string
+  progress: Record<string, number>
+}
+
+export interface MuscleGroupVolumeItem {
+  muscle_group_id: number
+  muscle_group_name: string
+  volume: number
+}
+
+export interface MuscleGroupVolumeResponse {
+  volume_by_group: MuscleGroupVolumeItem[]
+}
+
+export interface MuscleGroupFrequencyItem {
+  muscle_group_id: number
+  muscle_group_name: string
+  frequency: number
+}
+
+export interface MuscleGroupFrequencyResponse {
+  frequency_by_group: MuscleGroupFrequencyItem[]
+}
+
 export const analyticsService = {
   async getTrainingFrequency(startDate?: string, endDate?: string): Promise<TrainingFrequencyResponse> {
     const params: Record<string, string> = {}
@@ -89,6 +139,63 @@ export const analyticsService = {
     if (endDate) params.end_date = endDate
     
     const response = await api.get<BMIProgressResponse>('/analytics/user-bmi-progress', { params })
+    return response.data
+  },
+
+  async getStreak(): Promise<{ streak: number }> {
+    const response = await api.get<{ streak: number }>('/analytics/streak')
+    return response.data
+  },
+
+  async getAllPRs(limit?: number): Promise<PRsResponse> {
+    const params: Record<string, string> = {}
+    if (limit) params.limit = limit.toString()
+    
+    const response = await api.get<PRsResponse>('/analytics/prs', { params })
+    return response.data
+  },
+
+  async getExercisePR(exerciseId: number): Promise<ExercisePRResponse> {
+    const response = await api.get<ExercisePRResponse>(`/analytics/exercise/${exerciseId}/pr`)
+    return response.data
+  },
+
+  async getExercise1RMProgress(
+    exerciseId: number,
+    startDate?: string,
+    endDate?: string,
+    formula?: string
+  ): Promise<OneRMProgressResponse> {
+    const params: Record<string, string> = {}
+    if (startDate) params.start_date = startDate
+    if (endDate) params.end_date = endDate
+    if (formula) params.formula = formula
+    
+    const response = await api.get<OneRMProgressResponse>(
+      `/analytics/exercise/${exerciseId}/1rm-progress`,
+      { params }
+    )
+    return response.data
+  },
+
+  async getMuscleGroupVolume(startDate?: string, endDate?: string): Promise<MuscleGroupVolumeResponse> {
+    const params: Record<string, string> = {}
+    if (startDate) params.start_date = startDate
+    if (endDate) params.end_date = endDate
+    
+    const response = await api.get<MuscleGroupVolumeResponse>('/analytics/muscle-groups/volume', { params })
+    return response.data
+  },
+
+  async getMuscleGroupFrequency(startDate?: string, endDate?: string): Promise<MuscleGroupFrequencyResponse> {
+    const params: Record<string, string> = {}
+    if (startDate) params.start_date = startDate
+    if (endDate) params.end_date = endDate
+    
+    const response = await api.get<MuscleGroupFrequencyResponse>(
+      '/analytics/muscle-groups/frequency',
+      { params }
+    )
     return response.data
   },
 }

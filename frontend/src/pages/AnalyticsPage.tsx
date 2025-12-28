@@ -2,13 +2,20 @@ import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { analyticsService } from '../services/analytics.service'
 import { format, subDays } from 'date-fns'
+import ExerciseSelector from '../components/analytics/ExerciseSelector'
+import ExerciseProgress from '../components/analytics/ExerciseProgress'
+import MuscleGroupCharts from '../components/analytics/MuscleGroupCharts'
 
 interface ChartData {
   date: string
   value: number
 }
 
+type TabType = 'general' | 'exercises' | 'muscle-groups'
+
 export default function AnalyticsPage() {
+  const [activeTab, setActiveTab] = useState<TabType>('general')
+  const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null)
   const [trainingFrequency, setTrainingFrequency] = useState<ChartData[]>([])
   const [totalVolume, setTotalVolume] = useState<ChartData[]>([])
   const [weightProgress, setWeightProgress] = useState<ChartData[]>([])
@@ -29,27 +36,33 @@ export default function AnalyticsPage() {
 
       // Load training frequency
       const frequencyData = await analyticsService.getTrainingFrequency(dateRange.start, dateRange.end)
-      const frequencyChart = Object.entries(frequencyData.frequency).map(([date, count]) => ({
-        date: format(new Date(date), 'dd.MM'),
-        value: count,
-      }))
+      const frequencyChart = Object.entries(frequencyData.frequency)
+        .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
+        .map(([date, count]) => ({
+          date: format(new Date(date), 'dd.MM'),
+          value: count,
+        }))
       setTrainingFrequency(frequencyChart)
 
       // Load total volume
       const volumeData = await analyticsService.getTotalVolume(dateRange.start, dateRange.end)
-      const volumeChart = Object.entries(volumeData.volume).map(([date, volume]) => ({
-        date: format(new Date(date), 'dd.MM'),
-        value: Math.round(volume),
-      }))
+      const volumeChart = Object.entries(volumeData.volume)
+        .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
+        .map(([date, volume]) => ({
+          date: format(new Date(date), 'dd.MM'),
+          value: Math.round(volume),
+        }))
       setTotalVolume(volumeChart)
 
       // Load weight progress
       try {
         const weightData = await analyticsService.getUserWeightProgress(dateRange.start, dateRange.end)
-        const weightChart = Object.entries(weightData.progress).map(([date, weight]) => ({
-          date: format(new Date(date), 'dd.MM'),
-          value: weight,
-        }))
+        const weightChart = Object.entries(weightData.progress)
+          .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
+          .map(([date, weight]) => ({
+            date: format(new Date(date), 'dd.MM'),
+            value: weight,
+          }))
         setWeightProgress(weightChart)
       } catch (err) {
         console.error('Ошибка загрузки веса:', err)
@@ -59,10 +72,12 @@ export default function AnalyticsPage() {
       // Load BMI progress
       try {
         const bmiData = await analyticsService.getUserBMIProgress(dateRange.start, dateRange.end)
-        const bmiChart = Object.entries(bmiData.progress).map(([date, bmi]) => ({
-          date: format(new Date(date), 'dd.MM'),
-          value: bmi,
-        }))
+        const bmiChart = Object.entries(bmiData.progress)
+          .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
+          .map(([date, bmi]) => ({
+            date: format(new Date(date), 'dd.MM'),
+            value: bmi,
+          }))
         setBmiProgress(bmiChart)
       } catch (err) {
         console.error('Ошибка загрузки ИМТ:', err)
@@ -95,88 +110,143 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600">Загрузка данных...</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* Training Frequency Chart */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Частота тренировок</h2>
-            {trainingFrequency.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={trainingFrequency}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="value" stroke="#3b82f6" name="Количество тренировок" />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-gray-500 text-center py-8">Нет данных за выбранный период</p>
-            )}
-          </div>
+      {/* Tabs */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('general')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'general'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Общая аналитика
+          </button>
+          <button
+            onClick={() => setActiveTab('exercises')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'exercises'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            По упражнениям
+          </button>
+          <button
+            onClick={() => setActiveTab('muscle-groups')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'muscle-groups'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            По группам мышц
+          </button>
+        </nav>
+      </div>
 
-          {/* Total Volume Chart */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Общий объем (кг)</h2>
-            {totalVolume.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={totalVolume}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="value" stroke="#10b981" name="Объем (кг)" />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-gray-500 text-center py-8">Нет данных за выбранный период</p>
-            )}
-          </div>
-
-          {/* Weight Progress Chart */}
-          {weightProgress.length > 0 && (
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Изменение веса (кг)</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={weightProgress}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="value" stroke="#8b5cf6" name="Вес (кг)" />
-                </LineChart>
-              </ResponsiveContainer>
+      {/* Tab Content */}
+      {activeTab === 'general' && (
+        <>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">Загрузка данных...</p>
             </div>
-          )}
-
-          {/* BMI Progress Chart */}
-          {bmiProgress.length > 0 && (
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Индекс массы тела (ИМТ)</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={bmiProgress}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="value" stroke="#f59e0b" name="ИМТ" />
-                </LineChart>
-              </ResponsiveContainer>
-              <div className="mt-4 text-sm text-gray-600">
-                <p>Норма: 18.5 - 24.9 | Избыточный вес: 25 - 29.9 | Ожирение: ≥ 30</p>
+          ) : (
+            <div className="space-y-6">
+              {/* Training Frequency Chart */}
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Частота тренировок</h2>
+                {trainingFrequency.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={trainingFrequency}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="value" stroke="#3b82f6" name="Количество тренировок" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">Нет данных за выбранный период</p>
+                )}
               </div>
+
+              {/* Total Volume Chart */}
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Общий объем (кг)</h2>
+                {totalVolume.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={totalVolume}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="value" stroke="#10b981" name="Объем (кг)" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">Нет данных за выбранный период</p>
+                )}
+              </div>
+
+              {/* Weight Progress Chart */}
+              {weightProgress.length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Изменение веса (кг)</h2>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={weightProgress}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="value" stroke="#8b5cf6" name="Вес (кг)" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* BMI Progress Chart */}
+              {bmiProgress.length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Индекс массы тела (ИМТ)</h2>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={bmiProgress}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="value" stroke="#f59e0b" name="ИМТ" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 text-sm text-gray-600">
+                    <p>Норма: 18.5 - 24.9 | Избыточный вес: 25 - 29.9 | Ожирение: ≥ 30</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
+        </>
+      )}
+
+      {activeTab === 'exercises' && (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <ExerciseSelector
+              selectedExerciseId={selectedExerciseId}
+              onExerciseChange={setSelectedExerciseId}
+            />
+          </div>
+          <ExerciseProgress exerciseId={selectedExerciseId} dateRange={dateRange} />
         </div>
       )}
+
+      {activeTab === 'muscle-groups' && <MuscleGroupCharts dateRange={dateRange} />}
     </div>
   )
 }
