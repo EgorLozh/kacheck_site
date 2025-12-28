@@ -8,6 +8,7 @@ import TemplatesPage from './pages/TemplatesPage'
 import ExercisesPage from './pages/ExercisesPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import ActiveTrainingPage from './pages/ActiveTrainingPage'
+import CompletedTrainingPage from './pages/CompletedTrainingPage'
 import Layout from './components/layout/Layout'
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/trainings/active/:id" element={<ActiveTrainingPage />} />
+        <Route path="/trainings/completed/:id" element={<CompletedTrainingPage />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />

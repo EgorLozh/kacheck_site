@@ -20,6 +20,9 @@ export default function ActiveTrainingPage() {
   const [changingExerciseIndex, setChangingExerciseIndex] = useState<number | null>(null)
   const [startTime] = useState(new Date())
   const savingTrainingRef = useRef<Training | null>(null)
+  const [previousResults, setPreviousResults] = useState<Record<number, Set[]>>({})
+  const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
+  const [changeExerciseSearchQuery, setChangeExerciseSearchQuery] = useState('')
 
   useEffect(() => {
     if (id) {
@@ -34,11 +37,28 @@ export default function ActiveTrainingPage() {
       const data = await trainingService.getTrainingById(Number(id))
       setTraining(data)
       setError('')
+      // Load previous results for all exercises
+      await loadPreviousResults(data.implementations)
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка загрузки тренировки')
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadPreviousResults = async (implementations: Implementation[]) => {
+    const results: Record<number, Set[]> = {}
+    for (const impl of implementations) {
+      try {
+        const lastImpl = await trainingService.getLastExerciseImplementation(impl.exercise_id)
+        if (lastImpl) {
+          results[impl.exercise_id] = lastImpl.sets
+        }
+      } catch (err) {
+        console.error(`Ошибка загрузки предыдущих результатов для упражнения ${impl.exercise_id}:`, err)
+      }
+    }
+    setPreviousResults(results)
   }
 
   const loadExercises = async () => {
@@ -186,6 +206,19 @@ export default function ActiveTrainingPage() {
     setTraining(updatedTraining)
     debouncedSave(updatedTraining)
     setShowAddExerciseModal(false)
+    
+    // Load previous results for the new exercise
+    try {
+      const lastImpl = await trainingService.getLastExerciseImplementation(exerciseId)
+      if (lastImpl) {
+        setPreviousResults((prev) => ({
+          ...prev,
+          [exerciseId]: lastImpl.sets,
+        }))
+      }
+    } catch (err) {
+      console.error(`Ошибка загрузки предыдущих результатов для упражнения ${exerciseId}:`, err)
+    }
   }
 
   const handleDeleteExercise = async (index: number) => {
@@ -230,6 +263,19 @@ export default function ActiveTrainingPage() {
     debouncedSave(updatedTraining)
     setShowChangeExerciseModal(false)
     setChangingExerciseIndex(null)
+    
+    // Load previous results for the changed exercise
+    try {
+      const lastImpl = await trainingService.getLastExerciseImplementation(exerciseId)
+      if (lastImpl) {
+        setPreviousResults((prev) => ({
+          ...prev,
+          [exerciseId]: lastImpl.sets,
+        }))
+      }
+    } catch (err) {
+      console.error(`Ошибка загрузки предыдущих результатов для упражнения ${exerciseId}:`, err)
+    }
   }
 
   const handleAddSet = (implIndex: number, setData: SetData) => {
@@ -457,7 +503,7 @@ export default function ActiveTrainingPage() {
                   onUpdateSet={(setIndex, setData) => handleUpdateSet(index, setIndex, setData)}
                   onDeleteSet={(setIndex) => handleDeleteSet(index, setIndex)}
                   onDeleteExercise={() => handleDeleteExercise(index)}
-                  restTime={60} // Дефолтное время отдыха 60 секунд
+                  previousSets={previousResults[impl.exercise_id]}
                 />
               )
             })}
@@ -481,19 +527,36 @@ export default function ActiveTrainingPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Выберите упражнение</h2>
+            <input
+              type="text"
+              value={exerciseSearchQuery}
+              onChange={(e) => setExerciseSearchQuery(e.target.value)}
+              placeholder="Поиск упражнения..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
             <div className="max-h-96 overflow-y-auto space-y-2">
-              {exercises.map((exercise) => (
-                <button
-                  key={exercise.id}
-                  onClick={() => handleAddExercise(exercise.id)}
-                  className="w-full text-left px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-                >
-                  {exercise.name}
-                </button>
-              ))}
+              {exercises
+                .filter((exercise) =>
+                  exercise.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase())
+                )
+                .map((exercise) => (
+                  <button
+                    key={exercise.id}
+                    onClick={() => {
+                      handleAddExercise(exercise.id)
+                      setExerciseSearchQuery('')
+                    }}
+                    className="w-full text-left px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                  >
+                    {exercise.name}
+                  </button>
+                ))}
             </div>
             <button
-              onClick={() => setShowAddExerciseModal(false)}
+              onClick={() => {
+                setShowAddExerciseModal(false)
+                setExerciseSearchQuery('')
+              }}
               className="mt-4 w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
               Отмена
@@ -507,21 +570,36 @@ export default function ActiveTrainingPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Выберите новое упражнение</h2>
+            <input
+              type="text"
+              value={changeExerciseSearchQuery}
+              onChange={(e) => setChangeExerciseSearchQuery(e.target.value)}
+              placeholder="Поиск упражнения..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
             <div className="max-h-96 overflow-y-auto space-y-2">
-              {exercises.map((exercise) => (
-                <button
-                  key={exercise.id}
-                  onClick={() => handleChangeExercise(exercise.id)}
-                  className="w-full text-left px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-                >
-                  {exercise.name}
-                </button>
-              ))}
+              {exercises
+                .filter((exercise) =>
+                  exercise.name.toLowerCase().includes(changeExerciseSearchQuery.toLowerCase())
+                )
+                .map((exercise) => (
+                  <button
+                    key={exercise.id}
+                    onClick={() => {
+                      handleChangeExercise(exercise.id)
+                      setChangeExerciseSearchQuery('')
+                    }}
+                    className="w-full text-left px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                  >
+                    {exercise.name}
+                  </button>
+                ))}
             </div>
             <button
               onClick={() => {
                 setShowChangeExerciseModal(false)
                 setChangingExerciseIndex(null)
+                setChangeExerciseSearchQuery('')
               }}
               className="mt-4 w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >

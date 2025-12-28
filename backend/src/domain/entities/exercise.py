@@ -20,3 +20,4 @@ class Exercise:
     updated_at: datetime
 
 
+

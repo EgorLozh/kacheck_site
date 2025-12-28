@@ -17,3 +17,4 @@ class ExerciseName:
         return self.value.strip()
 
 
+

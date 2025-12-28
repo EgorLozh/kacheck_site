@@ -51,3 +51,4 @@ def downgrade() -> None:
     op.drop_column('users', 'height')
     op.drop_column('users', 'weight')
 
+

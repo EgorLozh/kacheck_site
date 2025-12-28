@@ -19,6 +19,8 @@ from src.presentation.schemas.training_template_schemas import (
     TemplateCreate,
     TemplateUpdate,
     TemplateResponse,
+    ImplementationTemplateBase,
+    SetTemplateBase,
 )
 from src.presentation.api.dependencies import get_current_user_id
 
@@ -28,6 +30,35 @@ router = APIRouter(prefix="/training-templates", tags=["training-templates"])
 def get_template_repository(db: Session = Depends(get_db)) -> TrainingTemplateRepositoryImpl:
     """Dependency to get training template repository."""
     return TrainingTemplateRepositoryImpl(db)
+
+
+def dto_to_response(dto) -> TemplateResponse:
+    """Convert TemplateResponseDTO to TemplateResponse Pydantic schema."""
+    impl_schemas = []
+    for impl_dto in dto.implementation_templates:
+        set_schemas = [
+            SetTemplateBase(
+                order_index=st.order_index,
+                weight=st.weight,
+                reps=st.reps,
+            )
+            for st in impl_dto.set_templates
+        ]
+        impl_schemas.append(
+            ImplementationTemplateBase(
+                exercise_id=impl_dto.exercise_id,
+                order_index=impl_dto.order_index,
+                set_templates=set_schemas,
+            )
+        )
+    
+    return TemplateResponse(
+        id=dto.id,
+        name=dto.name,
+        description=dto.description,
+        user_id=dto.user_id,
+        implementation_templates=impl_schemas,
+    )
 
 
 @router.post("", response_model=TemplateResponse, status_code=status.HTTP_201_CREATED)
@@ -87,7 +118,7 @@ async def create_template(
         )
 
         result = use_case.execute(dto, current_user_id)
-        return TemplateResponse(**result.__dict__)
+        return dto_to_response(result)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -103,7 +134,7 @@ async def get_templates(
     use_case = GetTemplatesUseCase(template_repository)
 
     results = use_case.execute(user_id=current_user_id, include_system=include_system)
-    return [TemplateResponse(**result.__dict__) for result in results]
+    return [dto_to_response(result) for result in results]
 
 
 @router.get("/{template_id}", response_model=TemplateResponse)
@@ -118,7 +149,7 @@ async def get_template(
     result = use_case.execute(template_id)
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
-    return TemplateResponse(**result.__dict__)
+    return dto_to_response(result)
 
 
 @router.put("/{template_id}", response_model=TemplateResponse)
@@ -156,7 +187,7 @@ async def update_template(
         )
 
         result = use_case.execute(template_id, dto, current_user_id)
-        return TemplateResponse(**result.__dict__)
+        return dto_to_response(result)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 

@@ -35,3 +35,4 @@ class ExerciseResponseDTO:
     muscle_group_ids: List[int]
 
 
+

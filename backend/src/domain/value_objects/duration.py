@@ -26,3 +26,4 @@ class Duration:
         return cls(value)
 
 
+

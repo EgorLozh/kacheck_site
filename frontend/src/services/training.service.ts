@@ -75,5 +75,17 @@ export const trainingService = {
     )
     return response.data
   },
+
+  async getLastExerciseImplementation(exerciseId: number): Promise<Implementation | null> {
+    try {
+      const response = await api.get<Implementation | null>(`/trainings/last-exercise/${exerciseId}`)
+      return response.data
+    } catch (err: any) {
+      if (err.response?.status === 404 || err.response?.status === 204) {
+        return null
+      }
+      throw err
+    }
+  },
 }
 

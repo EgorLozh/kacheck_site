@@ -100,3 +100,4 @@ class UserBodyMetricRepositoryImpl(IUserBodyMetricRepository):
             updated_at=db_metric.updated_at,
         )
 
+

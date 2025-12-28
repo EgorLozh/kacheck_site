@@ -14,6 +14,9 @@ export default function ExercisesPage() {
     description: '',
     muscle_group_ids: [] as number[],
   })
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterType, setFilterType] = useState<'all' | 'system' | 'custom'>('all')
+  const [groupByMuscleGroup, setGroupByMuscleGroup] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -90,6 +93,46 @@ export default function ExercisesPage() {
       .join(', ')
   }
 
+  // Filter exercises
+  const filteredExercises = exercises.filter((exercise) => {
+    // Search filter
+    if (searchQuery && !exercise.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false
+    }
+    // Type filter
+    if (filterType === 'system' && exercise.is_custom) {
+      return false
+    }
+    if (filterType === 'custom' && !exercise.is_custom) {
+      return false
+    }
+    return true
+  })
+
+  // Group exercises by muscle group
+  const groupedExercises = groupByMuscleGroup
+    ? filteredExercises.reduce((acc, exercise) => {
+        if (exercise.muscle_group_ids && exercise.muscle_group_ids.length > 0) {
+          exercise.muscle_group_ids.forEach((groupId) => {
+            const groupName = muscleGroups.find((mg) => mg.id === groupId)?.name || 'Без группы'
+            if (!acc[groupName]) {
+              acc[groupName] = []
+            }
+            // Avoid duplicates
+            if (!acc[groupName].find((e) => e.id === exercise.id)) {
+              acc[groupName].push(exercise)
+            }
+          })
+        } else {
+          if (!acc['Без группы']) {
+            acc['Без группы'] = []
+          }
+          acc['Без группы'].push(exercise)
+        }
+        return acc
+      }, {} as Record<string, Exercise[]>)
+    : null
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -115,19 +158,117 @@ export default function ExercisesPage() {
         </div>
       )}
 
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Search */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Поиск</label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Поиск по названию..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          {/* Filter by type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Тип</label>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value as 'all' | 'system' | 'custom')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Все</option>
+              <option value="system">Системные</option>
+              <option value="custom">Пользовательские</option>
+            </select>
+          </div>
+          {/* Group by muscle group */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Группировка</label>
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={groupByMuscleGroup}
+                onChange={(e) => setGroupByMuscleGroup(e.target.checked)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">По группам мышц</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
       {loading ? (
         <div className="bg-white p-6 rounded-lg shadow">
           <p className="text-gray-600">Загрузка...</p>
         </div>
-      ) : exercises.length === 0 ? (
+      ) : filteredExercises.length === 0 ? (
         <div className="bg-white p-6 rounded-lg shadow">
           <p className="text-gray-600 text-center py-8">
-            Упражнения не найдены. Создайте первое упражнение!
+            Упражнения не найдены. {exercises.length === 0 ? 'Создайте первое упражнение!' : 'Попробуйте изменить фильтры.'}
           </p>
         </div>
+      ) : groupByMuscleGroup && groupedExercises ? (
+        // Grouped view
+        <div className="space-y-6">
+          {Object.entries(groupedExercises)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([groupName, groupExercises]) => (
+              <div key={groupName} className="bg-white rounded-lg shadow">
+                <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900">{groupName}</h2>
+                  <p className="text-sm text-gray-500">Упражнений: {groupExercises.length}</p>
+                </div>
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {groupExercises.map((exercise) => (
+                    <div
+                      key={exercise.id}
+                      className="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">{exercise.name}</h3>
+                        {!exercise.is_custom && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Системное
+                          </span>
+                        )}
+                      </div>
+                      
+                      {exercise.description && (
+                        <p className="text-sm text-gray-700 mb-3">{exercise.description}</p>
+                      )}
+
+                      {exercise.image_path && (
+                        <div className="mb-3">
+                          <img
+                            src={exercise.image_path}
+                            alt={exercise.name}
+                            className="w-full h-32 object-cover rounded"
+                          />
+                        </div>
+                      )}
+
+                      {exercise.is_custom && (
+                        <button
+                          onClick={() => handleDeleteExercise(exercise.id)}
+                          className="mt-2 px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                        >
+                          Удалить
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+        </div>
       ) : (
+        // Regular grid view
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {exercises.map((exercise) => (
+          {filteredExercises.map((exercise) => (
             <div
               key={exercise.id}
               className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"

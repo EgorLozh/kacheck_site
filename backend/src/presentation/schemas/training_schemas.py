@@ -62,3 +62,4 @@ class TrainingResponse(TrainingBase):
         from_attributes = True
 
 
+

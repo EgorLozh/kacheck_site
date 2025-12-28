@@ -153,6 +153,54 @@ class TrainingRepositoryImpl(ITrainingRepository):
             self.db.delete(db_training)
             self.db.commit()
 
+    def get_last_exercise_implementation(
+        self, user_id: int, exercise_id: int
+    ) -> Optional[Implementation]:
+        """Get last implementation of an exercise for a user from completed training."""
+        # Find the last completed training with this exercise
+        db_training = (
+            self.db.query(TrainingModel)
+            .join(ImplementationModel)
+            .filter(
+                TrainingModel.user_id == user_id,
+                TrainingModel.status == TrainingStatus.COMPLETED.value,
+                ImplementationModel.exercise_id == exercise_id,
+            )
+            .options(joinedload(TrainingModel.implementations).joinedload(ImplementationModel.sets))
+            .order_by(TrainingModel.date_time.desc())
+            .first()
+        )
+
+        if not db_training:
+            return None
+
+        # Find the implementation for this exercise
+        for db_impl in db_training.implementations:
+            if db_impl.exercise_id == exercise_id:
+                sets = []
+                for db_set in sorted(db_impl.sets, key=lambda s: s.order_index):
+                    sets.append(
+                        Set(
+                            id=db_set.id,
+                            implementation_id=db_set.implementation_id,
+                            order_index=db_set.order_index,
+                            weight=Weight(float(db_set.weight)),
+                            reps=Reps(int(db_set.reps)),
+                            rest_time=RestTime.optional(db_set.rest_time),
+                            duration=Duration.optional(db_set.duration),
+                            rpe=RPE.optional(db_set.rpe),
+                        )
+                    )
+                return Implementation(
+                    id=db_impl.id,
+                    training_id=db_impl.training_id,
+                    exercise_id=db_impl.exercise_id,
+                    order_index=db_impl.order_index,
+                    sets=sets,
+                )
+
+        return None
+
     def _to_entity(self, db_training: TrainingModel) -> Training:
         """Convert SQLAlchemy model to domain entity."""
         implementations = []
@@ -193,5 +241,6 @@ class TrainingRepositoryImpl(ITrainingRepository):
             created_at=db_training.created_at,
             updated_at=db_training.updated_at,
         )
+
 
 

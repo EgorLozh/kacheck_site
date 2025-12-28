@@ -28,3 +28,4 @@ class TrainingTemplateModel(Base):
     trainings = relationship("TrainingModel", back_populates="training_template")
 
 
+

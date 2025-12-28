@@ -43,3 +43,4 @@ class IUserBodyMetricRepository(ABC):
         """Delete body metric."""
         pass
 
+

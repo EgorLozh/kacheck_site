@@ -21,3 +21,4 @@ class DeleteTrainingUseCase:
         self.training_repository.delete(training_id)
 
 
+

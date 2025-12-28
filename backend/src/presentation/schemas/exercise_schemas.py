@@ -37,3 +37,4 @@ class ExerciseResponse(ExerciseBase):
         from_attributes = True
 
 
+

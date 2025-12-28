@@ -3,6 +3,7 @@ from typing import Optional, List
 from datetime import datetime
 
 from ..entities.training import Training
+from ..entities.implementation import Implementation
 
 
 class ITrainingRepository(ABC):
@@ -37,5 +38,13 @@ class ITrainingRepository(ABC):
     def delete(self, training_id: int) -> None:
         """Delete training."""
         pass
+
+    @abstractmethod
+    def get_last_exercise_implementation(
+        self, user_id: int, exercise_id: int
+    ) -> Optional[Implementation]:
+        """Get last implementation of an exercise for a user from completed training."""
+        pass
+
 
 

@@ -12,10 +12,14 @@ interface SetInputProps {
   initialData?: SetData
   onSave: (data: SetData) => void
   onCancel?: () => void
+  previousResult?: { weight: number; reps: number }
+  previousSetWeight?: number
 }
 
-export default function SetInput({ setIndex, initialData, onSave, onCancel }: SetInputProps) {
-  const [weight, setWeight] = useState(initialData?.weight || 0)
+export default function SetInput({ setIndex, initialData, onSave, onCancel, previousResult, previousSetWeight }: SetInputProps) {
+  // Auto-fill weight from previous set if this is a new set (setIndex > 1) and no initial data
+  const initialWeight = initialData?.weight || (setIndex > 1 && previousSetWeight !== undefined ? previousSetWeight : 0)
+  const [weight, setWeight] = useState(initialWeight)
   const [reps, setReps] = useState(initialData?.reps || 0)
   const [restTime, setRestTime] = useState(initialData?.rest_time || undefined)
   const [rpe, setRpe] = useState(initialData?.rpe || undefined)
@@ -35,6 +39,11 @@ export default function SetInput({ setIndex, initialData, onSave, onCancel }: Se
     <div className="bg-white border border-gray-300 rounded-lg p-3 space-y-2">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium text-gray-700">Подход {setIndex}</span>
+        {previousResult && (
+          <span className="text-xs text-gray-400 opacity-50">
+            Последний раз: {previousResult.weight} кг × {previousResult.reps}
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-2">

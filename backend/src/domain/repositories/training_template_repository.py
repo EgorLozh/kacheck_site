@@ -33,3 +33,4 @@ class ITrainingTemplateRepository(ABC):
         pass
 
 
+

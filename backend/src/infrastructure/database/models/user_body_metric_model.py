@@ -21,3 +21,4 @@ class UserBodyMetricModel(Base):
     # Relationships
     user = relationship("UserModel", back_populates="body_metrics")
 
+

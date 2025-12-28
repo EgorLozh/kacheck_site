@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const [weightProgress, setWeightProgress] = useState<ChartData[]>([])
   const [showWeightInput, setShowWeightInput] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [motivationalMessage, setMotivationalMessage] = useState<{ text: string; type: 'success' | 'info' | 'warning' } | null>(null)
 
   useEffect(() => {
     loadStats()
@@ -58,6 +59,28 @@ export default function DashboardPage() {
         total: trainings.length,
         totalVolume: Math.round(totalVolume),
       })
+
+      // Calculate motivational message based on last training date
+      const completedTrainings = trainings.filter((t) => t.status === 'completed')
+      if (completedTrainings.length > 0) {
+        const lastTraining = completedTrainings[0] // Already sorted by date desc
+        const lastTrainingDate = new Date(lastTraining.date_time)
+        const daysSinceLastTraining = Math.floor(
+          (today.getTime() - lastTrainingDate.getTime()) / (1000 * 60 * 60 * 24)
+        )
+
+        if (daysSinceLastTraining === 0) {
+          setMotivationalMessage({ text: 'Отличная работа сегодня!', type: 'success' })
+        } else if (daysSinceLastTraining <= 2) {
+          setMotivationalMessage({ text: 'Продолжайте в том же духе!', type: 'success' })
+        } else if (daysSinceLastTraining <= 7) {
+          setMotivationalMessage({ text: 'Давно не виделись, готовы попотеть?', type: 'info' })
+        } else {
+          setMotivationalMessage({ text: 'Время вернуться к тренировкам!', type: 'warning' })
+        }
+      } else {
+        setMotivationalMessage({ text: 'Начните свою первую тренировку!', type: 'info' })
+      }
     } catch (err) {
       console.error('Ошибка загрузки статистики:', err)
     }
@@ -134,9 +157,29 @@ export default function DashboardPage() {
     loadCharts()
   }
 
+  const getMessageStyles = (type: 'success' | 'info' | 'warning') => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-50 border-green-200 text-green-800'
+      case 'info':
+        return 'bg-blue-50 border-blue-200 text-blue-800'
+      case 'warning':
+        return 'bg-yellow-50 border-yellow-200 text-yellow-800'
+      default:
+        return 'bg-gray-50 border-gray-200 text-gray-800'
+    }
+  }
+
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Дашборд</h1>
+      
+      {/* Motivational Message */}
+      {motivationalMessage && (
+        <div className={`mb-6 p-4 rounded-lg border ${getMessageStyles(motivationalMessage.type)}`}>
+          <p className="font-medium text-lg">{motivationalMessage.text}</p>
+        </div>
+      )}
       
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">

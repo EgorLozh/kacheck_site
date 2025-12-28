@@ -12,6 +12,9 @@ from src.application.use_cases.trainings.delete_training import DeleteTrainingUs
 from src.application.use_cases.trainings.create_training_from_template import (
     CreateTrainingFromTemplateUseCase,
 )
+from src.application.use_cases.trainings.get_last_exercise_implementation import (
+    GetLastExerciseImplementationUseCase,
+)
 from src.application.dto.training_dto import CreateTrainingDTO, UpdateTrainingDTO, ImplementationDTO, SetDTO
 from src.presentation.schemas.training_schemas import (
     TrainingCreate,
@@ -237,4 +240,37 @@ async def create_training_from_template(
         return dto_to_response(result)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/last-exercise/{exercise_id}", response_model=Optional[ImplementationBase])
+async def get_last_exercise_implementation(
+    exercise_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """Get last implementation of an exercise from completed training."""
+    training_repository = get_training_repository(db)
+    use_case = GetLastExerciseImplementationUseCase(training_repository)
+
+    result = use_case.execute(exercise_id, current_user_id)
+    if not result:
+        return None
+
+    set_schemas = [
+        SetBase(
+            order_index=st.order_index,
+            weight=st.weight,
+            reps=st.reps,
+            rest_time=st.rest_time,
+            duration=st.duration,
+            rpe=st.rpe,
+        )
+        for st in result.sets
+    ]
+
+    return ImplementationBase(
+        exercise_id=result.exercise_id,
+        order_index=result.order_index,
+        sets=set_schemas,
+    )
 

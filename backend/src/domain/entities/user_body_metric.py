@@ -15,3 +15,4 @@ class UserBodyMetric:
     created_at: datetime
     updated_at: datetime
 
+

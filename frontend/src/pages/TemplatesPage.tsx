@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { templateService } from '../services/template.service'
 import { trainingService } from '../services/training.service'
-import type { TrainingTemplate } from '../types'
+import { exerciseService } from '../services/exercise.service'
+import type { TrainingTemplate, Exercise, ImplementationTemplate, SetTemplate } from '../types'
 
 export default function TemplatesPage() {
   const navigate = useNavigate()
@@ -10,6 +11,11 @@ export default function TemplatesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showAddExerciseModal, setShowAddExerciseModal] = useState(false)
+  const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
+  const [editingTemplate, setEditingTemplate] = useState<TrainingTemplate | null>(null)
+  const [exercises, setExercises] = useState<Exercise[]>([])
   const [newTemplate, setNewTemplate] = useState({
     name: '',
     description: '',
@@ -17,7 +23,17 @@ export default function TemplatesPage() {
 
   useEffect(() => {
     loadTemplates()
+    loadExercises()
   }, [])
+
+  const loadExercises = async () => {
+    try {
+      const data = await exerciseService.getExercises(true)
+      setExercises(data)
+    } catch (err) {
+      console.error('Ошибка загрузки упражнений:', err)
+    }
+  }
 
   const loadTemplates = async () => {
     try {
@@ -78,6 +94,75 @@ export default function TemplatesPage() {
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка создания тренировки из шаблона')
     }
+  }
+
+  const handleUpdateTemplate = async () => {
+    if (!editingTemplate) return
+
+    try {
+      await templateService.updateTemplate(editingTemplate.id, {
+        name: editingTemplate.name,
+        description: editingTemplate.description,
+        implementation_templates: editingTemplate.implementation_templates,
+      })
+      setShowEditModal(false)
+      setEditingTemplate(null)
+      loadTemplates()
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Ошибка обновления шаблона')
+    }
+  }
+
+  const handleAddExerciseToTemplate = (exerciseId: number) => {
+    if (!editingTemplate) return
+
+    const newImpl: ImplementationTemplate = {
+      exercise_id: exerciseId,
+      order_index: editingTemplate.implementation_templates.length + 1,
+      set_templates: [],
+    }
+
+    setEditingTemplate({
+      ...editingTemplate,
+      implementation_templates: [...editingTemplate.implementation_templates, newImpl],
+    })
+  }
+
+  const handleRemoveExerciseFromTemplate = (index: number) => {
+    if (!editingTemplate) return
+
+    const updated = editingTemplate.implementation_templates.filter((_, i) => i !== index)
+    const reordered = updated.map((impl, i) => ({
+      ...impl,
+      order_index: i + 1,
+    }))
+
+    setEditingTemplate({
+      ...editingTemplate,
+      implementation_templates: reordered,
+    })
+  }
+
+  const handleAddSetToTemplate = (implIndex: number) => {
+    if (!editingTemplate) return
+
+    const impl = editingTemplate.implementation_templates[implIndex]
+    const newSet: SetTemplate = {
+      order_index: impl.set_templates.length + 1,
+      weight: undefined,
+      reps: undefined,
+    }
+
+    const updated = [...editingTemplate.implementation_templates]
+    updated[implIndex] = {
+      ...impl,
+      set_templates: [...impl.set_templates, newSet],
+    }
+
+    setEditingTemplate({
+      ...editingTemplate,
+      implementation_templates: updated,
+    })
   }
 
   return (
@@ -151,12 +236,23 @@ export default function TemplatesPage() {
                     Начать тренировку
                   </button>
                   {template.user_id && (
-                    <button
-                      onClick={() => handleDeleteTemplate(template.id)}
-                      className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                    >
-                      Удалить
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          setEditingTemplate(template)
+                          setShowEditModal(true)
+                        }}
+                        className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                      >
+                        Редактировать
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTemplate(template.id)}
+                        className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                      >
+                        Удалить
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -220,6 +316,142 @@ export default function TemplatesPage() {
                 Отмена
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editingTemplate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Редактировать шаблон</h2>
+            
+            <div className="space-y-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Название <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editingTemplate.name}
+                  onChange={(e) =>
+                    setEditingTemplate({ ...editingTemplate, name: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Описание
+                </label>
+                <textarea
+                  value={editingTemplate.description || ''}
+                  onChange={(e) =>
+                    setEditingTemplate({ ...editingTemplate, description: e.target.value })
+                  }
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Упражнения
+                </label>
+                <div className="space-y-2">
+                  {editingTemplate.implementation_templates.map((impl, implIndex) => {
+                    const exercise = exercises.find((e) => e.id === impl.exercise_id)
+                    return (
+                      <div key={implIndex} className="border border-gray-300 rounded p-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-medium">
+                            {exercise?.name || `Упражнение #${impl.exercise_id}`}
+                          </span>
+                          <button
+                            onClick={() => handleRemoveExerciseFromTemplate(implIndex)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Удалить
+                          </button>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Подходов: {impl.set_templates.length}
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <button
+                    onClick={() => setShowAddExerciseModal(true)}
+                    className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded text-gray-600 hover:border-gray-400"
+                  >
+                    + Добавить упражнение
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleUpdateTemplate}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Сохранить
+              </button>
+              <button
+                onClick={() => {
+                  setShowEditModal(false)
+                  setEditingTemplate(null)
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Exercise to Template Modal */}
+      {showAddExerciseModal && editingTemplate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Выберите упражнение</h2>
+            <input
+              type="text"
+              value={exerciseSearchQuery}
+              onChange={(e) => setExerciseSearchQuery(e.target.value)}
+              placeholder="Поиск упражнения..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="max-h-96 overflow-y-auto space-y-2">
+              {exercises
+                .filter((exercise) =>
+                  exercise.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase())
+                )
+                .map((exercise) => (
+                  <button
+                    key={exercise.id}
+                    onClick={() => {
+                      handleAddExerciseToTemplate(exercise.id)
+                      setShowAddExerciseModal(false)
+                      setExerciseSearchQuery('')
+                    }}
+                    className="w-full text-left px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                  >
+                    {exercise.name}
+                  </button>
+                ))}
+            </div>
+            <button
+              onClick={() => {
+                setShowAddExerciseModal(false)
+                setExerciseSearchQuery('')
+              }}
+              className="mt-4 w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+            >
+              Отмена
+            </button>
           </div>
         </div>
       )}

@@ -36,3 +36,4 @@ class GetBodyMetricsUseCase:
             for metric in metrics
         ]
 
+

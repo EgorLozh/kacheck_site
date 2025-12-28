@@ -47,3 +47,4 @@ async def get_muscle_groups(
     return [MuscleGroupResponse(**result.__dict__) for result in results]
 
 
+

@@ -30,3 +30,4 @@ class UpdateUserProfileDTO:
     weight: Optional[float] = None  # Weight in kg
     height: Optional[float] = None  # Height in cm
 
+

@@ -84,6 +84,33 @@ export default function TrainingsPage() {
     }
   }
 
+  const handleCreateTemplateFromTraining = async (training: Training) => {
+    if (!confirm('Создать шаблон из этой тренировки?')) return
+
+    try {
+      // Convert training implementations to template implementations
+      const implementation_templates = training.implementations.map((impl) => ({
+        exercise_id: impl.exercise_id,
+        order_index: impl.order_index,
+        set_templates: impl.sets.map((set) => ({
+          order_index: set.order_index,
+          weight: set.weight,
+          reps: set.reps,
+        })),
+      }))
+
+      await templateService.createTemplate({
+        name: `Тренировка от ${formatDate(training.date_time)}`,
+        description: `Создано из тренировки #${training.id}`,
+        implementation_templates,
+      })
+
+      alert('Шаблон успешно создан!')
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Ошибка создания шаблона')
+    }
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleString('ru-RU', {
@@ -251,12 +278,26 @@ export default function TrainingsPage() {
                           </p>
                         )}
                       </div>
-                      <button
-                        onClick={() => handleDeleteTraining(training.id)}
-                        className="ml-4 px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                      >
-                        Удалить
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => navigate(`/trainings/completed/${training.id}`)}
+                          className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                        >
+                          Просмотреть
+                        </button>
+                        <button
+                          onClick={() => handleCreateTemplateFromTraining(training)}
+                          className="px-3 py-1 text-sm text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded transition-colors"
+                        >
+                          Создать шаблон
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTraining(training.id)}
+                          className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                        >
+                          Удалить
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

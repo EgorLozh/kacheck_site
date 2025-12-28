@@ -27,3 +27,4 @@ COPY --from=builder /app/build ./build
 CMD ["sh", "-c", "cp -r build/* /shared/static/"]
 
 
+
