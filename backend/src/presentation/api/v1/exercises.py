@@ -11,7 +11,7 @@ from src.application.use_cases.exercises.update_exercise import UpdateExerciseUs
 from src.application.use_cases.exercises.delete_exercise import DeleteExerciseUseCase
 from src.application.dto.exercise_dto import CreateExerciseDTO, UpdateExerciseDTO
 from src.presentation.schemas.exercise_schemas import ExerciseCreate, ExerciseUpdate, ExerciseResponse
-from src.presentation.api.dependencies import get_current_user_id
+from src.presentation.api.dependencies import get_current_user_id, get_optional_user_id
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])
 
@@ -48,9 +48,9 @@ async def create_exercise(
 async def get_exercises(
     include_system: bool = True,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
+    current_user_id: Optional[int] = Depends(get_optional_user_id),
 ):
-    """Get all exercises."""
+    """Get all exercises (public endpoint - authentication optional)."""
     exercise_repository = get_exercise_repository(db)
     use_case = GetExercisesUseCase(exercise_repository)
 
