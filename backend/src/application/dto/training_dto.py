@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, List
 from datetime import datetime
 
@@ -60,7 +60,10 @@ class TrainingResponseDTO:
     duration: Optional[int]
     notes: Optional[str]
     status: TrainingStatus
-    implementations: List[ImplementationDTO]
+    created_at: datetime
+    share_token: Optional[str] = None
+    implementations: List[ImplementationDTO] = field(default_factory=list)
+
 
 
 

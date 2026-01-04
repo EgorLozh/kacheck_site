@@ -1,16 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { userProfileService } from '../services/user-profile.service'
 
 interface WeightHeightInputProps {
   onSuccess?: () => void
   onCancel?: () => void
+  initialHeight?: number
 }
 
-export default function WeightHeightInput({ onSuccess, onCancel }: WeightHeightInputProps) {
+export default function WeightHeightInput({ onSuccess, onCancel, initialHeight }: WeightHeightInputProps) {
   const [weight, setWeight] = useState<string>('')
   const [height, setHeight] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>('')
+
+  useEffect(() => {
+    if (initialHeight) {
+      setHeight(initialHeight.toString())
+    }
+  }, [initialHeight])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -107,5 +114,6 @@ export default function WeightHeightInput({ onSuccess, onCancel }: WeightHeightI
     </div>
   )
 }
+
 
 

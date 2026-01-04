@@ -5,6 +5,10 @@ import { exerciseService } from '../services/exercise.service'
 import type { Training, Exercise, Implementation, Set } from '../types'
 import ExerciseCard from '../components/training/ExerciseCard'
 import { SetData } from '../components/training/SetInput'
+import { formatTrainingName } from '../utils/dateFormatter'
+import ShareButton from '../components/training/ShareButton'
+import ReactionList from '../components/social/ReactionList'
+import CommentSection from '../components/social/CommentSection'
 
 export default function CompletedTrainingPage() {
   const { id } = useParams<{ id: string }>()
@@ -272,8 +276,7 @@ export default function CompletedTrainingPage() {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Тренировка #{training.id}</h1>
-            <p className="text-sm text-gray-600 mt-1">{formatDate(training.date_time)}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{formatTrainingName(training.date_time)}</h1>
             {training.duration && (
               <p className="text-sm text-gray-500 mt-1">
                 Длительность: {Math.floor(training.duration / 60)} мин
@@ -294,6 +297,7 @@ export default function CompletedTrainingPage() {
                 )}
               </div>
             )}
+            {!isEditing && <ShareButton training={training} onUpdate={setTraining} />}
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
@@ -441,7 +445,16 @@ export default function CompletedTrainingPage() {
           </div>
         </div>
       )}
+
+      {/* Reactions and Comments */}
+      {!isEditing && (
+        <div className="p-6 bg-white rounded-lg shadow mt-6">
+          <ReactionList trainingId={training.id} />
+          <CommentSection trainingId={training.id} />
+        </div>
+      )}
     </div>
   )
 }
+
 

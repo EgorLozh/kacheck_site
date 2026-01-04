@@ -46,5 +46,10 @@ class ITrainingRepository(ABC):
         """Get last implementation of an exercise for a user from completed training."""
         pass
 
+    @abstractmethod
+    def get_by_share_token(self, share_token: str) -> Optional[Training]:
+        """Get training by share token."""
+        pass
+
 
 

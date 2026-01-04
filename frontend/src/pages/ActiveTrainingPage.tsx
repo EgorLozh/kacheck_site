@@ -5,6 +5,7 @@ import { exerciseService } from '../services/exercise.service'
 import type { Training, Exercise, Implementation, Set } from '../types'
 import ExerciseCard from '../components/training/ExerciseCard'
 import { SetData } from '../components/training/SetInput'
+import { formatTrainingName } from '../utils/dateFormatter'
 
 export default function ActiveTrainingPage() {
   const { id } = useParams<{ id: string }>()
@@ -18,7 +19,6 @@ export default function ActiveTrainingPage() {
   const [showAddExerciseModal, setShowAddExerciseModal] = useState(false)
   const [showChangeExerciseModal, setShowChangeExerciseModal] = useState(false)
   const [changingExerciseIndex, setChangingExerciseIndex] = useState<number | null>(null)
-  const [startTime] = useState(new Date())
   const savingTrainingRef = useRef<Training | null>(null)
   const [previousResults, setPreviousResults] = useState<Record<number, Set[]>>({})
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
@@ -364,7 +364,10 @@ export default function ActiveTrainingPage() {
     }
 
     try {
-      const duration = Math.floor((new Date().getTime() - startTime.getTime()) / 1000)
+      // Calculate duration from created_at to now
+      const createdTime = new Date(training.created_at).getTime()
+      const now = new Date().getTime()
+      const duration = Math.floor((now - createdTime) / 1000)
       await trainingService.updateTraining(Number(id), {
         status: 'completed',
         duration,
@@ -385,7 +388,10 @@ export default function ActiveTrainingPage() {
   }
 
   const getElapsedTime = () => {
-    const elapsed = Math.floor((new Date().getTime() - startTime.getTime()) / 1000)
+    if (!training) return '0:00'
+    const createdTime = new Date(training.created_at).getTime()
+    const now = new Date().getTime()
+    const elapsed = Math.floor((now - createdTime) / 1000)
     const hours = Math.floor(elapsed / 3600)
     const minutes = Math.floor((elapsed % 3600) / 60)
     const seconds = elapsed % 60

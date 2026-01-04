@@ -9,6 +9,9 @@ from .set_template_model import SetTemplateModel
 from .training_model import TrainingModel
 from .implementation_model import ImplementationModel
 from .set_model import SetModel
+from .follow_model import FollowModel
+from .training_reaction_model import TrainingReactionModel
+from .training_comment_model import TrainingCommentModel
 
 __all__ = [
     "UserModel",
@@ -22,6 +25,9 @@ __all__ = [
     "TrainingModel",
     "ImplementationModel",
     "SetModel",
+    "FollowModel",
+    "TrainingReactionModel",
+    "TrainingCommentModel",
 ]
 
 

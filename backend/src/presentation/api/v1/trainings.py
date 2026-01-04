@@ -4,9 +4,10 @@ from typing import List, Optional
 from datetime import datetime
 
 from src.infrastructure.database.session import get_db
-from src.infrastructure.repositories import TrainingRepositoryImpl, TrainingTemplateRepositoryImpl
+from src.infrastructure.repositories import TrainingRepositoryImpl, TrainingTemplateRepositoryImpl, FollowRepositoryImpl
 from src.application.use_cases.trainings.create_training import CreateTrainingUseCase
 from src.application.use_cases.trainings.get_training_by_id import GetTrainingByIdUseCase
+from src.application.use_cases.trainings.get_training_by_id_with_follow_check import GetTrainingByIdWithFollowCheckUseCase
 from src.application.use_cases.trainings.update_training import UpdateTrainingUseCase
 from src.application.use_cases.trainings.delete_training import DeleteTrainingUseCase
 from src.application.use_cases.trainings.create_training_from_template import (
@@ -15,6 +16,9 @@ from src.application.use_cases.trainings.create_training_from_template import (
 from src.application.use_cases.trainings.get_last_exercise_implementation import (
     GetLastExerciseImplementationUseCase,
 )
+from src.application.use_cases.trainings.generate_share_token import GenerateShareTokenUseCase
+from src.application.use_cases.trainings.get_shared_training import GetSharedTrainingUseCase
+from src.application.use_cases.trainings.remove_share_token import RemoveShareTokenUseCase
 from src.application.dto.training_dto import CreateTrainingDTO, UpdateTrainingDTO, ImplementationDTO, SetDTO
 from src.presentation.schemas.training_schemas import (
     TrainingCreate,
@@ -59,6 +63,8 @@ def dto_to_response(dto) -> TrainingResponse:
         duration=dto.duration,
         notes=dto.notes,
         status=dto.status,
+        created_at=dto.created_at,
+        share_token=dto.share_token,
         implementations=impl_schemas,
     )
 
@@ -66,6 +72,11 @@ def dto_to_response(dto) -> TrainingResponse:
 def get_training_repository(db: Session = Depends(get_db)) -> TrainingRepositoryImpl:
     """Dependency to get training repository."""
     return TrainingRepositoryImpl(db)
+
+
+def get_follow_repository(db: Session = Depends(get_db)) -> FollowRepositoryImpl:
+    """Dependency to get follow repository."""
+    return FollowRepositoryImpl(db)
 
 
 @router.post("", response_model=TrainingResponse, status_code=status.HTTP_201_CREATED)
@@ -147,9 +158,10 @@ async def get_training(
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id),
 ):
-    """Get training by ID."""
+    """Get training by ID. Allows access if user owns the training or has approved follow relationship."""
     training_repository = get_training_repository(db)
-    use_case = GetTrainingByIdUseCase(training_repository)
+    follow_repository = get_follow_repository(db)
+    use_case = GetTrainingByIdWithFollowCheckUseCase(training_repository, follow_repository)
 
     result = use_case.execute(training_id, current_user_id)
     if not result:
@@ -273,4 +285,62 @@ async def get_last_exercise_implementation(
         order_index=result.order_index,
         sets=set_schemas,
     )
+
+
+@router.post("/{training_id}/share", response_model=TrainingResponse)
+async def share_training(
+    training_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """Generate or get share token for a training."""
+    training_repository = get_training_repository(db)
+    use_case = GenerateShareTokenUseCase(training_repository)
+
+    try:
+        result = use_case.execute(training_id, current_user_id)
+        return dto_to_response(result)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.delete("/{training_id}/share", response_model=TrainingResponse)
+async def unshare_training(
+    training_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """Remove share token from a training."""
+    training_repository = get_training_repository(db)
+    use_case = RemoveShareTokenUseCase(training_repository)
+
+    try:
+        result = use_case.execute(training_id, current_user_id)
+        return dto_to_response(result)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/shared/{share_token}", response_model=TrainingResponse)
+async def get_shared_training(
+    share_token: str,
+    db: Session = Depends(get_db),
+):
+    """Get a shared training by token (no authentication required)."""
+    from src.infrastructure.repositories import UserRepositoryImpl
+    
+    training_repository = get_training_repository(db)
+    user_repository = UserRepositoryImpl(db)
+    use_case = GetSharedTrainingUseCase(training_repository)
+
+    try:
+        result = use_case.execute(share_token)
+        response = dto_to_response(result)
+        # Get username for shared training
+        user = user_repository.get_by_id(result.user_id)
+        if user:
+            response.username = user.username
+        return response
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

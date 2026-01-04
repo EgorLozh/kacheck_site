@@ -4,6 +4,9 @@ from .exercise_repository_impl import ExerciseRepositoryImpl
 from .muscle_group_repository_impl import MuscleGroupRepositoryImpl
 from .training_template_repository_impl import TrainingTemplateRepositoryImpl
 from .training_repository_impl import TrainingRepositoryImpl
+from .follow_repository_impl import FollowRepositoryImpl
+from .training_reaction_repository_impl import TrainingReactionRepositoryImpl
+from .training_comment_repository_impl import TrainingCommentRepositoryImpl
 
 __all__ = [
     "UserRepositoryImpl",
@@ -12,5 +15,8 @@ __all__ = [
     "MuscleGroupRepositoryImpl",
     "TrainingTemplateRepositoryImpl",
     "TrainingRepositoryImpl",
+    "FollowRepositoryImpl",
+    "TrainingReactionRepositoryImpl",
+    "TrainingCommentRepositoryImpl",
 ]
 

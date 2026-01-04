@@ -28,5 +28,6 @@ class Training:
     status: TrainingStatus
     created_at: datetime
     updated_at: datetime
+    share_token: Optional[str] = None  # Token for public sharing
     implementations: List[Implementation] = field(default_factory=list)
 

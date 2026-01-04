@@ -445,3 +445,35 @@ async def get_muscle_group_frequency(
     }
 
 
+@router.get("/new-records")
+async def get_new_records(
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """Get new records: first-time exercises and new PRs from the latest training."""
+    training_repository = get_training_repository(db)
+    exercise_repository = get_exercise_repository(db)
+    trainings = training_repository.get_all(user_id=current_user_id)
+
+    new_records = AnalyticsService.get_new_records(trainings)
+
+    # Enrich with exercise names
+    enriched_records = []
+    for record in new_records:
+        exercise = exercise_repository.get_by_id(record['exercise_id'])
+        if exercise:
+            enriched_records.append({
+                'type': record['type'],
+                'exercise_id': record['exercise_id'],
+                'exercise_name': str(exercise.name),
+                'weight': record['weight'],
+                'reps': record['reps'],
+                'date': str(record['date']),
+                'training_id': record['training_id'],
+            })
+
+    return {
+        "new_records": enriched_records,
+    }
+
+

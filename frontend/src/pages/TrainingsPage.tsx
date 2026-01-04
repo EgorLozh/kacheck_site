@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { trainingService } from '../services/training.service'
 import { templateService } from '../services/template.service'
 import type { Training, TrainingTemplate } from '../types'
+import { formatTrainingName } from '../utils/dateFormatter'
 
 export default function TrainingsPage() {
   const navigate = useNavigate()
@@ -200,7 +201,7 @@ export default function TrainingsPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            Тренировка #{training.id}
+                            {formatTrainingName(training.date_time)}
                           </h3>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -210,9 +211,6 @@ export default function TrainingsPage() {
                             {getStatusText(training.status)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          {formatDate(training.date_time)}
-                        </p>
                         {training.implementations && training.implementations.length > 0 && (
                           <p className="text-sm text-gray-500">
                             Упражнений: {training.implementations.length}
@@ -254,7 +252,7 @@ export default function TrainingsPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            Тренировка #{training.id}
+                            {formatTrainingName(training.date_time)}
                           </h3>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -264,9 +262,6 @@ export default function TrainingsPage() {
                             {getStatusText(training.status)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          {formatDate(training.date_time)}
-                        </p>
                         {training.duration && (
                           <p className="text-sm text-gray-500">
                             Длительность: {Math.floor(training.duration / 60)} мин
@@ -319,7 +314,7 @@ export default function TrainingsPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            Тренировка #{training.id}
+                            {formatTrainingName(training.date_time)}
                           </h3>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -329,9 +324,6 @@ export default function TrainingsPage() {
                             {getStatusText(training.status)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          {formatDate(training.date_time)}
-                        </p>
                       </div>
                       <button
                         onClick={() => handleDeleteTraining(training.id)}

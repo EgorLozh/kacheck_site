@@ -32,6 +32,7 @@ class TrainingRepositoryImpl(ITrainingRepository):
             duration=training.duration,
             notes=training.notes,
             status=training.status,
+            share_token=training.share_token,
         )
         self.db.add(db_training)
         self.db.flush()
@@ -112,6 +113,7 @@ class TrainingRepositoryImpl(ITrainingRepository):
         db_training.duration = training.duration
         db_training.notes = training.notes
         db_training.status = training.status
+        db_training.share_token = training.share_token
 
         # Delete old implementations
         self.db.query(ImplementationModel).filter(
@@ -152,6 +154,18 @@ class TrainingRepositoryImpl(ITrainingRepository):
         if db_training:
             self.db.delete(db_training)
             self.db.commit()
+
+    def get_by_share_token(self, share_token: str) -> Optional[Training]:
+        """Get training by share token."""
+        db_training = (
+            self.db.query(TrainingModel)
+            .options(
+                joinedload(TrainingModel.implementations).joinedload(ImplementationModel.sets)
+            )
+            .filter(TrainingModel.share_token == share_token)
+            .first()
+        )
+        return self._to_entity(db_training) if db_training else None
 
     def get_last_exercise_implementation(
         self, user_id: int, exercise_id: int
@@ -237,6 +251,7 @@ class TrainingRepositoryImpl(ITrainingRepository):
             duration=db_training.duration,
             notes=db_training.notes,
             status=TrainingStatus(db_training.status.value),
+            share_token=db_training.share_token,
             implementations=implementations,
             created_at=db_training.created_at,
             updated_at=db_training.updated_at,

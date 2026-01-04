@@ -4,6 +4,7 @@ import { userProfileService } from '../services/user-profile.service'
 import { analyticsService } from '../services/analytics.service'
 import WeightHeightInput from '../components/WeightHeightInput'
 import PRList from '../components/analytics/PRList'
+import NewRecordsCard from '../components/analytics/NewRecordsCard'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { format, subDays } from 'date-fns'
 import type { Training } from '../types'
@@ -294,6 +295,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* New Records Section */}
+      <div className="mb-6">
+        <NewRecordsCard />
+      </div>
+
       {/* Personal Records Section */}
       <div className="bg-white p-6 rounded-lg shadow mb-6">
         <div className="flex justify-between items-center mb-4">
@@ -336,6 +342,7 @@ export default function DashboardPage() {
         <WeightHeightInput
           onSuccess={handleWeightInputSuccess}
           onCancel={() => setShowWeightInput(false)}
+          initialHeight={profile.height}
         />
       )}
     </div>

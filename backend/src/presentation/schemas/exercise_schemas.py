@@ -38,3 +38,5 @@ class ExerciseResponse(ExerciseBase):
 
 
 
+
+

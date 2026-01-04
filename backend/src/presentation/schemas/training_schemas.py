@@ -56,10 +56,14 @@ class TrainingResponse(TrainingBase):
     id: int
     user_id: int
     training_template_id: Optional[int]
+    created_at: datetime
+    share_token: Optional[str] = None
+    username: Optional[str] = None  # Username of the training owner (for shared trainings)
     implementations: List[ImplementationBase]
 
     class Config:
         from_attributes = True
+
 
 
 

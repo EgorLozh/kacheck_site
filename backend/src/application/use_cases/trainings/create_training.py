@@ -102,6 +102,8 @@ class CreateTrainingUseCase:
             duration=training.duration,
             notes=training.notes,
             status=training.status,
+            created_at=training.created_at,
+            share_token=training.share_token,
             implementations=impl_dtos,
         )
 

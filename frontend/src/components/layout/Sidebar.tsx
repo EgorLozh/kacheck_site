@@ -82,6 +82,34 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 Аналитика
               </NavLink>
             </li>
+            <li>
+              <NavLink
+                to="/followers"
+                className={({ isActive }) =>
+                  `block px-4 py-2 rounded-md ${
+                    isActive
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`
+                }
+              >
+                Подписчики
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/following"
+                className={({ isActive }) =>
+                  `block px-4 py-2 rounded-md ${
+                    isActive
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`
+                }
+              >
+                Подписки
+              </NavLink>
+            </li>
           </ul>
         </nav>
       </aside>
@@ -189,6 +217,36 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   }
                 >
                   Аналитика
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/followers"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `block px-4 py-2 rounded-md ${
+                      isActive
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`
+                  }
+                >
+                  Подписчики
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/following"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `block px-4 py-2 rounded-md ${
+                      isActive
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`
+                  }
+                >
+                  Подписки
                 </NavLink>
               </li>
             </ul>

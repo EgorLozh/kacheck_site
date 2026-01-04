@@ -55,6 +55,8 @@ export interface Implementation {
   sets: Set[]
 }
 
+export type FollowStatus = 'pending' | 'approved' | 'rejected'
+
 export interface Training {
   id: number
   user_id: number
@@ -63,6 +65,9 @@ export interface Training {
   duration?: number
   notes?: string
   status: 'planned' | 'in_progress' | 'completed' | 'skipped'
+  created_at: string
+  share_token?: string
+  username?: string  // Username of the training owner (for shared trainings)
   implementations: Implementation[]
 }
 

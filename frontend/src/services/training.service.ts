@@ -87,5 +87,20 @@ export const trainingService = {
       throw err
     }
   },
+
+  async shareTraining(id: number): Promise<Training> {
+    const response = await api.post<Training>(`/trainings/${id}/share`)
+    return response.data
+  },
+
+  async unshareTraining(id: number): Promise<Training> {
+    const response = await api.delete<Training>(`/trainings/${id}/share`)
+    return response.data
+  },
+
+  async getSharedTraining(shareToken: string): Promise<Training> {
+    const response = await api.get<Training>(`/trainings/shared/${shareToken}`)
+    return response.data
+  },
 }
 

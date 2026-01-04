@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from src.domain.entities.user import User
 from src.domain.repositories.user_repository import IUserRepository
@@ -65,6 +66,14 @@ class UserRepositoryImpl(IUserRepository):
         if db_user:
             self.db.delete(db_user)
             self.db.commit()
+
+    def search_by_username(self, username_query: str, limit: int = 20) -> List[User]:
+        """Search users by username (case-insensitive partial match)."""
+        query = self.db.query(UserModel).filter(
+            UserModel.username.ilike(f"%{username_query}%")
+        ).limit(limit)
+        db_users = query.all()
+        return [self._to_entity(user) for user in db_users]
 
     @staticmethod
     def _to_entity(db_user: UserModel) -> User:

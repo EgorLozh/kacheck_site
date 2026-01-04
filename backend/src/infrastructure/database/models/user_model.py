@@ -24,5 +24,9 @@ class UserModel(Base):
     exercises = relationship("ExerciseModel", back_populates="user", cascade="all, delete-orphan")
     trainings = relationship("TrainingModel", back_populates="user", cascade="all, delete-orphan")
     body_metrics = relationship("UserBodyMetricModel", back_populates="user", cascade="all, delete-orphan")
+    following = relationship("FollowModel", foreign_keys="FollowModel.follower_id", back_populates="follower", cascade="all, delete-orphan")
+    followers = relationship("FollowModel", foreign_keys="FollowModel.following_id", back_populates="following_user", cascade="all, delete-orphan")
+    training_reactions = relationship("TrainingReactionModel", back_populates="user", cascade="all, delete-orphan")
+    training_comments = relationship("TrainingCommentModel", back_populates="user", cascade="all, delete-orphan")
 
 

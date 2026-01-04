@@ -429,4 +429,113 @@ class AnalyticsService:
                     progress[date] = max_1rm
         return progress
 
+    @staticmethod
+    def get_new_records(trainings: List[Training]) -> List[Dict]:
+        """
+        Get new records: first-time exercises and new PRs.
+
+        Args:
+            trainings: List of trainings (should be sorted by date_time descending)
+
+        Returns:
+            List of dictionaries with new record info:
+            [
+                {
+                    'type': 'first_time' | 'pr',
+                    'exercise_id': int,
+                    'weight': float,
+                    'reps': int,
+                    'date': date,
+                    'training_id': int
+                },
+                ...
+            ]
+        """
+        if not trainings:
+            return []
+
+        # Filter only completed trainings
+        completed_trainings = [t for t in trainings if t.status.value == "completed"]
+        if not completed_trainings:
+            return []
+
+        # Sort by date_time descending (most recent first)
+        sorted_trainings = sorted(
+            completed_trainings,
+            key=lambda t: t.date_time if isinstance(t.date_time, datetime) else t.date_time,
+            reverse=True
+        )
+
+        if len(sorted_trainings) == 0:
+            return []
+
+        # Get the most recent training
+        latest_training = sorted_trainings[0]
+        latest_training_date = latest_training.date_time.date() if isinstance(latest_training.date_time, datetime) else latest_training.date_time
+
+        # Get all previous trainings (excluding the latest)
+        previous_trainings = sorted_trainings[1:]
+
+        new_records = []
+
+        # Track exercises done in previous trainings
+        previous_exercises: Dict[int, Dict] = {}  # exercise_id -> {'max_weight': float, 'max_reps': int}
+
+        for training in previous_trainings:
+            for impl in training.implementations:
+                exercise_id = impl.exercise_id
+                if exercise_id not in previous_exercises:
+                    previous_exercises[exercise_id] = {'max_weight': 0.0, 'max_reps': 0}
+
+                for set_entity in impl.sets:
+                    weight = float(set_entity.weight.value)
+                    reps = int(set_entity.reps.value)
+                    if weight > previous_exercises[exercise_id]['max_weight']:
+                        previous_exercises[exercise_id]['max_weight'] = weight
+                    if reps > previous_exercises[exercise_id]['max_reps']:
+                        previous_exercises[exercise_id]['max_reps'] = reps
+
+        # Check latest training for new records
+        for impl in latest_training.implementations:
+            exercise_id = impl.exercise_id
+            is_first_time = exercise_id not in previous_exercises
+
+            for set_entity in impl.sets:
+                weight = float(set_entity.weight.value)
+                reps = int(set_entity.reps.value)
+
+                if is_first_time:
+                    # First time doing this exercise
+                    new_records.append({
+                        'type': 'first_time',
+                        'exercise_id': exercise_id,
+                        'weight': weight,
+                        'reps': reps,
+                        'date': latest_training_date,
+                        'training_id': latest_training.id,
+                    })
+                    # Mark as seen to avoid duplicates
+                    previous_exercises[exercise_id] = {'max_weight': weight, 'max_reps': reps}
+                    break  # Only one record per exercise for first time
+                else:
+                    # Check if this is a new PR (weight or reps)
+                    prev_max_weight = previous_exercises[exercise_id]['max_weight']
+                    prev_max_reps = previous_exercises[exercise_id]['max_reps']
+
+                    if weight > prev_max_weight or (weight == prev_max_weight and reps > prev_max_reps):
+                        new_records.append({
+                            'type': 'pr',
+                            'exercise_id': exercise_id,
+                            'weight': weight,
+                            'reps': reps,
+                            'date': latest_training_date,
+                            'training_id': latest_training.id,
+                        })
+                        # Update previous max
+                        previous_exercises[exercise_id]['max_weight'] = max(prev_max_weight, weight)
+                        previous_exercises[exercise_id]['max_reps'] = max(prev_max_reps, reps)
+                        break  # Only one record per exercise for PR
+
+        return new_records
+
 

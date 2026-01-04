@@ -82,6 +82,20 @@ export interface MuscleGroupFrequencyResponse {
   frequency_by_group: MuscleGroupFrequencyItem[]
 }
 
+export interface NewRecord {
+  type: 'first_time' | 'pr'
+  exercise_id: number
+  exercise_name: string
+  weight: number
+  reps: number
+  date: string
+  training_id: number
+}
+
+export interface NewRecordsResponse {
+  new_records: NewRecord[]
+}
+
 export const analyticsService = {
   async getTrainingFrequency(startDate?: string, endDate?: string): Promise<TrainingFrequencyResponse> {
     const params: Record<string, string> = {}
@@ -196,6 +210,11 @@ export const analyticsService = {
       '/analytics/muscle-groups/frequency',
       { params }
     )
+    return response.data
+  },
+
+  async getNewRecords(): Promise<NewRecordsResponse> {
+    const response = await api.get<NewRecordsResponse>('/analytics/new-records')
     return response.data
   },
 }

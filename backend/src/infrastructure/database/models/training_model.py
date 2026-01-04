@@ -18,6 +18,7 @@ class TrainingModel(Base):
     duration = Column(Integer, nullable=True)  # Duration in seconds
     notes = Column(String, nullable=True)
     status = Column(SQLEnum(TrainingStatus, native_enum=True), nullable=False, default=TrainingStatus.PLANNED)
+    share_token = Column(String, nullable=True, unique=True, index=True)  # Token for public sharing
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -30,5 +31,7 @@ class TrainingModel(Base):
         cascade="all, delete-orphan",
         order_by="ImplementationModel.order_index",
     )
+    reactions = relationship("TrainingReactionModel", back_populates="training", cascade="all, delete-orphan")
+    comments = relationship("TrainingCommentModel", back_populates="training", cascade="all, delete-orphan", order_by="TrainingCommentModel.created_at")
 
 

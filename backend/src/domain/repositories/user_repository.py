@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, List
 
 from ..entities.user import User
 
@@ -31,6 +31,13 @@ class IUserRepository(ABC):
     def delete(self, user_id: int) -> None:
         """Delete user."""
         pass
+
+    @abstractmethod
+    def search_by_username(self, username_query: str, limit: int = 20) -> List[User]:
+        """Search users by username (case-insensitive partial match)."""
+        pass
+
+
 
 
 

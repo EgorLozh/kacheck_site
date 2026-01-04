@@ -7,6 +7,7 @@ from .training_templates import router as training_templates_router
 from .trainings import router as trainings_router
 from .analytics import router as analytics_router
 from .user_profile import router as user_profile_router
+from .social import router as social_router
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -17,4 +18,5 @@ api_router.include_router(training_templates_router)
 api_router.include_router(trainings_router)
 api_router.include_router(analytics_router)
 api_router.include_router(user_profile_router)
+api_router.include_router(social_router)
 
